@@ -7,6 +7,7 @@ from plone.indexer.interfaces import IIndexableObject
 from plone.registry.interfaces import IRegistry
 from pysolr import SolrError
 from rer.solrpush import _
+from rer.solrpush.interfaces.adapter import IExtractFileFromTika
 from rer.solrpush.interfaces.settings import IRerSolrpushSettings
 from zope.component import getUtility
 from zope.component import queryMultiAdapter
@@ -218,6 +219,17 @@ def extract_fields(nodes):
     return fields
 
 
+def attachment_to_index(item):
+    """
+    If item has a provider to extract text, return the file to be indexed
+    """
+    try:
+        provider = IExtractFileFromTika(item)
+        return provider.get_file_to_index()
+    except TypeError:
+        return None
+
+
 def is_solr_active():
     """Just checking if solr indexing is set to active in control panel"""
     return get_setting(field="active")
@@ -287,6 +299,10 @@ def create_index_dict(item):
         )
     else:
         index_me["url"] = item.absolute_url()
+
+    attachment = attachment_to_index(item)
+    if attachment:
+        index_me["attachment"] = attachment
     return index_me
 
 
@@ -439,16 +455,48 @@ def push_to_solr(item_or_obj):
     if not solr:
         logger.error("Unable to push to solr. Configuration is incomplete.")
         return
+    attachment = None
     if not isinstance(item_or_obj, dict):
         if can_index(item_or_obj):
             item_or_obj = create_index_dict(item_or_obj)
         else:
             item_or_obj = None
-    if item_or_obj:
-        solr.add([item_or_obj])
-        return True
-    else:
+    if not item_or_obj:
         return False
+    if "attachment" in item_or_obj:
+        attachment = item_or_obj["attachment"]
+        del item_or_obj["attachment"]
+        add_with_attachment(
+            solr=solr, attachment=attachment, fields=item_or_obj
+        )
+    else:
+        solr.add([item_or_obj])
+    return True
+
+
+def add_with_attachment(solr, attachment, fields):
+    params = {
+        "extractOnly": "false",
+        "lowernames": "false",
+        "fmap.content": "SearchableText",
+        "fmap.title": "SearchableText",
+        "fmap.created": "ignore_created",
+        "fmap.modified": "ignore_modified",
+        "literalsOverride": "false",
+        "commit": "true",
+    }
+    params.update(
+        {
+            "literal.{key}".format(key=key): value
+            for (key, value) in fields.items()
+        }
+    )
+    return solr._send_request(
+        "post",
+        "update/extract",
+        body=params,
+        files={"file": ("extracted", attachment)},
+    )
 
 
 def remove_from_solr(uid):
