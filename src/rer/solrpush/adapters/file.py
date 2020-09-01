@@ -9,8 +9,7 @@ class FileExtractor(object):
         self.context = context
 
     def get_file_to_index(self):
-        """
-        """
+        """"""
         if not self.context.file:
             return ""
         return self.context.file.data

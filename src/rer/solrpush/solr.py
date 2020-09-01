@@ -344,6 +344,7 @@ def generate_query(
     facet_fields=["Subject", "portal_type"],
     filtered_sites=[],
 ):
+
     solr_query = {
         "q": "",
         "fq": [],
