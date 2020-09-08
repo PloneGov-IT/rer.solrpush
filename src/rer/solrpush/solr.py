@@ -353,6 +353,7 @@ def generate_query(
         "json.nl": "arrmap",
     }
     solr_query.update(extract_from_query(query=query))
+
     if not solr_query["q"]:
         solr_query["q"] = "*:*"
     if filtered_sites:
