@@ -9,17 +9,18 @@ from pysolr import SolrError
 from rer.solrpush import _
 from rer.solrpush.interfaces.adapter import IExtractFileFromTika
 from rer.solrpush.interfaces.settings import IRerSolrpushSettings
+from six.moves import map
 from zope.component import getUtility
 from zope.component import queryMultiAdapter
 from zope.i18n import translate
 
+import json
 import logging
 import pysolr
+import re
 import requests
 import six
-import json
-import re
-from six.moves import map
+
 
 if six.PY2:
     from ftfy import fix_text
@@ -384,7 +385,7 @@ def manage_elevate(query):
         return params
     if not searchableText.replace(" ", ""):
         return params
-    elevate_map = json.loads(get_setting("elevate_schema"))
+    elevate_map = get_setting("elevate_schema")
     if not elevate_map:
         return params
     try:
@@ -410,7 +411,7 @@ def manage_elevate(query):
                 "(^|\s+)" + config.get("text", "") + "(\s+|$)", text  # noqa
             ):
                 params["enableElevation"] = "true"
-                params["elevateIds"] = ",".join(config.get("ids", []))
+                params["elevateIds"] = ",".join(config.get("uid", []))
                 break
     return params
 

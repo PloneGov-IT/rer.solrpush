@@ -22,11 +22,11 @@ msgstr ""
 msgid "Active"
 msgstr ""
 
-#: rer/solrpush/browser/controlpanel.py:72
+#: rer/solrpush/browser/controlpanel.py:78
 msgid "Cancel"
 msgstr ""
 
-#: rer/solrpush/browser/controlpanel.py:62
+#: rer/solrpush/browser/controlpanel.py:66
 msgid "Changes saved."
 msgstr ""
 
@@ -54,7 +54,7 @@ msgstr ""
 msgid "Installs the rer.solrpush add-on."
 msgstr ""
 
-#: rer/solrpush/browser/controlpanel.py:68
+#: rer/solrpush/browser/controlpanel.py:74
 msgid "Loaded schema.xml from SOLR"
 msgstr ""
 
@@ -78,11 +78,11 @@ msgstr ""
 msgid "Ready"
 msgstr ""
 
-#: rer/solrpush/browser/controlpanel.py:76
+#: rer/solrpush/browser/controlpanel.py:82
 msgid "Reload schema.xml"
 msgstr ""
 
-#: rer/solrpush/browser/controlpanel.py:85
+#: rer/solrpush/browser/controlpanel.py:93
 msgid "Reloaded schema.xml from SOLR"
 msgstr ""
 
@@ -98,7 +98,7 @@ msgstr ""
 msgid "SOLR url"
 msgstr ""
 
-#: rer/solrpush/browser/controlpanel.py:55
+#: rer/solrpush/browser/controlpanel.py:59
 msgid "Save"
 msgstr ""
 
@@ -161,6 +161,36 @@ msgstr ""
 msgid "content_remove_error"
 msgstr ""
 
+#. Default: "The word that should match in the search."
+#: rer/solrpush/interfaces/settings.py:24
+msgid "elevate_row_schema_text_help"
+msgstr ""
+
+#. Default: "Text"
+#: rer/solrpush/interfaces/settings.py:23
+msgid "elevate_row_schema_text_label"
+msgstr ""
+
+#. Default: "Select a list of elements to elevate for that search word."
+#: rer/solrpush/interfaces/settings.py:32
+msgid "elevate_row_schema_uid_help"
+msgstr ""
+
+#. Default: "Elements"
+#: rer/solrpush/interfaces/settings.py:31
+msgid "elevate_row_schema_uid_label"
+msgstr ""
+
+#. Default: "Insert a list of values for elevate."
+#: rer/solrpush/interfaces/settings.py:81
+msgid "elevate_schema_help"
+msgstr ""
+
+#. Default: "Elevate configuration"
+#: rer/solrpush/interfaces/settings.py:80
+msgid "elevate_schema_label"
+msgstr ""
+
 #. Default: "Select a list of portal types to index in solr. Empty list means that all portal types will be indexed."
 #: rer/solrpush/interfaces/settings.py:69
 msgid "enabled_types_help"
@@ -221,12 +251,12 @@ msgid "maintenance_cancel_action"
 msgstr ""
 
 #. Default: "Get all Plone contents and reindex them on SOLR."
-#: rer/solrpush/browser/maintenance.py:300
+#: rer/solrpush/browser/maintenance.py:303
 msgid "maintenance_reindex_help"
 msgstr ""
 
 #. Default: "Reindex SOLR"
-#: rer/solrpush/browser/maintenance.py:299
+#: rer/solrpush/browser/maintenance.py:302
 msgid "maintenance_reindex_label"
 msgstr ""
 
@@ -241,17 +271,17 @@ msgid "maintenance_reset_solr_label"
 msgstr ""
 
 #. Default: "SOLR index dropped"
-#: rer/solrpush/browser/maintenance.py:91
+#: rer/solrpush/browser/maintenance.py:94
 msgid "maintenance_reset_success"
 msgstr ""
 
 #. Default: "Remove no more existing contents from SOLR and sync with Plone."
-#: rer/solrpush/browser/maintenance.py:310
+#: rer/solrpush/browser/maintenance.py:313
 msgid "maintenance_sync_help"
 msgstr ""
 
 #. Default: "Sync SOLR"
-#: rer/solrpush/browser/maintenance.py:309
+#: rer/solrpush/browser/maintenance.py:312
 msgid "maintenance_sync_label"
 msgstr ""
 
@@ -276,22 +306,22 @@ msgid "search_error_label"
 msgstr ""
 
 #. Default: "Settings"
-#: rer/solrpush/browser/controlpanel.py:23
+#: rer/solrpush/browser/controlpanel.py:24
 msgid "settings_default_label"
 msgstr ""
 
 #. Default: "Sono presenti degli errori, si prega di ricontrollare i dati inseriti"
-#: rer/solrpush/browser/controlpanel.py:44
+#: rer/solrpush/browser/controlpanel.py:48
 msgid "settings_form_error"
 msgstr ""
 
 #. Default: "Use these settings to tweak search results."
-#: rer/solrpush/browser/controlpanel.py:29
+#: rer/solrpush/browser/controlpanel.py:32
 msgid "settings_search_help"
 msgstr ""
 
 #. Default: "Search"
-#: rer/solrpush/browser/controlpanel.py:28
+#: rer/solrpush/browser/controlpanel.py:31
 msgid "settings_search_label"
 msgstr ""
 
@@ -300,7 +330,7 @@ msgid "solr_configuration_error_label"
 msgstr ""
 
 #. Default: "There have been problems connecting to SOLR. Contact site administrator."
-#: rer/solrpush/browser/maintenance.py:105
+#: rer/solrpush/browser/maintenance.py:108
 msgid "solr_error_connection"
 msgstr ""
 
