@@ -9,10 +9,13 @@ from pysolr import SolrError
 from rer.solrpush import _
 from rer.solrpush.interfaces.adapter import IExtractFileFromTika
 from rer.solrpush.interfaces.settings import IRerSolrpushSettings
+from rer.solrpush.interfaces import IElevateSettings
 from six.moves import map
 from zope.component import getUtility
 from zope.component import queryMultiAdapter
 from zope.i18n import translate
+
+# from rer.solrpush.restapi.services.solr_search.batch import DEFAULT_BATCH_SIZE
 
 import json
 import logging
@@ -79,22 +82,22 @@ ESCAPE_CHARS_RE = re.compile(r'(?<!\\)(?P<char>[&|+\-!(){}[\]^"~*?:])')
 
 def escape_special_characters(value, wrap):
     new_value = ESCAPE_CHARS_RE.sub(r"\\\g<char>", value)
-    # if ('OR' not in new_value or 'AND' not in new_value) and ' ' in new_value:
+    # if ('OR' not in new_value or 'AND' not in new_value) and ' ' in new_value:  # noqa
     #     new_value = '"{}"'.format(new_value)
     if wrap:
         return '"{}"'.format(new_value)
     return new_value
 
 
-def get_setting(field):
+def get_setting(field, interface=IRerSolrpushSettings):
     return api.portal.get_registry_record(
-        field, interface=IRerSolrpushSettings, default=False
+        field, interface=interface, default=False
     )
 
 
-def set_setting(field, value):
+def set_setting(field, value, interface=IRerSolrpushSettings):
     return api.portal.set_registry_record(
-        field, interface=IRerSolrpushSettings, value=value
+        field, interface=interface, value=value
     )
 
 
@@ -300,10 +303,7 @@ def create_index_dict(item):
         )
     else:
         index_me["url"] = item.absolute_url()
-
-    attachment = attachment_to_index(item)
-    if attachment:
-        index_me["attachment"] = attachment
+    index_me["attachment"] = attachment_to_index(item)
     return index_me
 
 
@@ -385,7 +385,9 @@ def manage_elevate(query):
         return params
     if not searchableText.replace(" ", ""):
         return params
-    elevate_map = get_setting("elevate_schema")
+    elevate_map = get_setting(
+        field="elevate_schema", interface=IElevateSettings
+    )
     if not elevate_map:
         return params
     try:
@@ -407,12 +409,11 @@ def manage_elevate(query):
             # if s in text:
 
             # contains regexp
-            if re.search(
-                "(^|\s+)" + config.get("text", "") + "(\s+|$)", text  # noqa
-            ):
-                params["enableElevation"] = "true"
-                params["elevateIds"] = ",".join(config.get("uid", []))
-                break
+            for word in config.get("text", []):
+                if re.search("(^|\s+)" + word + "(\s+|$)", text):  # noqa
+                    params["enableElevation"] = "true"
+                    params["elevateIds"] = ",".join(config.get("uid", []))
+                    break
     return params
 
 
@@ -458,7 +459,6 @@ def push_to_solr(item_or_obj):
     if not solr:
         logger.error("Unable to push to solr. Configuration is incomplete.")
         return
-    attachment = None
     if not isinstance(item_or_obj, dict):
         if can_index(item_or_obj):
             item_or_obj = create_index_dict(item_or_obj)
@@ -466,9 +466,8 @@ def push_to_solr(item_or_obj):
             item_or_obj = None
     if not item_or_obj:
         return False
-    if "attachment" in item_or_obj:
-        attachment = item_or_obj["attachment"]
-        del item_or_obj["attachment"]
+    attachment = item_or_obj.pop("attachment", None)
+    if attachment:
         add_with_attachment(
             solr=solr, attachment=attachment, fields=item_or_obj
         )

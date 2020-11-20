@@ -1,40 +1,47 @@
 # -*- coding: utf-8 -*-
-"""Setup tests for this package."""
 from plone import api
 from plone.api.portal import set_registry_record
 from plone.app.testing import setRoles
+from plone.app.testing import SITE_OWNER_NAME
+from plone.app.testing import SITE_OWNER_PASSWORD
 from plone.app.testing import TEST_USER_ID
-from rer.solrpush.interfaces import IElevateSettings
+from plone.restapi.testing import RelativeSession
+from Products.CMFCore.utils import getToolByName
 from rer.solrpush.interfaces.settings import IRerSolrpushSettings
+from rer.solrpush.testing import RER_SOLRPUSH_API_FUNCTIONAL_TESTING
 from rer.solrpush.solr import init_solr_push
 from rer.solrpush.solr import reset_solr
-from rer.solrpush.solr import search
-from rer.solrpush.testing import RER_SOLRPUSH_API_FUNCTIONAL_TESTING
-from transaction import commit
 
+from transaction import commit
 import unittest
 
 
-class TestSolrSearch(unittest.TestCase):
-    """
-    """
+class SearchBandiTest(unittest.TestCase):
 
     layer = RER_SOLRPUSH_API_FUNCTIONAL_TESTING
 
     def setUp(self):
-        """
-        """
+        self.app = self.layer["app"]
+        self.portal = self.layer["portal"]
+        self.portal_url = self.portal.absolute_url()
+        self.catalog = getToolByName(self.portal, "portal_catalog")
+
         self.portal = self.layer["portal"]
         self.request = self.layer["request"]
+
+        self.api_session = RelativeSession(self.portal_url)
+        self.api_session.headers.update({"Accept": "application/json"})
+        self.api_session.auth = (SITE_OWNER_NAME, SITE_OWNER_PASSWORD)
+
         setRoles(self.portal, TEST_USER_ID, ["Manager"])
+
         set_registry_record(
-            "enabled_types",
-            ["Document", "News Item"],
-            interface=IRerSolrpushSettings,
+            "enabled_types", ["Document", "News Item"], interface=IRerSolrpushSettings
         )
 
         init_solr_push()
         commit()
+
         self.doc1 = api.content.create(
             container=self.portal,
             type="Document",
@@ -67,6 +74,8 @@ class TestSolrSearch(unittest.TestCase):
         self.event = api.content.create(
             container=self.portal, type="Event", title="Event", subject=["foo"]
         )
+
+        # publish contents
         api.content.transition(obj=self.doc1, transition="publish")
         api.content.transition(obj=self.doc2, transition="publish")
         api.content.transition(obj=self.published_news, transition="publish")
@@ -75,37 +84,14 @@ class TestSolrSearch(unittest.TestCase):
 
     def tearDown(self):
         set_registry_record("active", True, interface=IRerSolrpushSettings)
-        #  reset elevate
-        set_registry_record("elevate_schema", [], interface=IElevateSettings)
         reset_solr()
         commit()
 
-    def test_search_with_elevate(self):
-        doc3 = api.content.create(
-            container=self.portal, type="Document", title="Third page"
-        )
-        doc4 = api.content.create(
-            container=self.portal, type="Document", title="Fourth page"
-        )
-        api.content.transition(obj=doc3, transition="publish")
-        api.content.transition(obj=doc4, transition="publish")
-        commit()
+    def test_search_works(self):
 
-        solr_results = search(
-            query={"SearchableText": "page"}, fl="UID Title"
-        ).docs
-        self.assertNotEqual(solr_results[0]["UID"], doc4.UID())
-
-        # now let's set an elevate for fourth document
-        set_registry_record(
-            "elevate_schema",
-            [{"text": [u"page"], "uid": [doc4.UID()]}],
-            interface=IElevateSettings,
-        )
-        commit()
-
-        solr_results = search(
-            query={"SearchableText": "page"}, fl="UID Title"
-        ).docs
-
-        self.assertEqual(solr_results[0]["UID"], doc4.UID())
+        solr_response = self.api_session.get("/@solr-search")
+        plone_response = self.api_session.get("/@search")
+        solr_results = solr_response.json()
+        plone_results = plone_response.json()
+        self.assertEqual(plone_results[u"items_total"], 6)
+        self.assertEqual(solr_results[u"items_total"], 3)

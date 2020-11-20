@@ -10,6 +10,7 @@
     profile="rer.solrpush:default"
     handler=".upgrades.to_1100"
     />
+  
   <genericsetup:upgradeStep
     source="1100"
     destination="1200"

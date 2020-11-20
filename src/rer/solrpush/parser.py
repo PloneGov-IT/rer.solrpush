@@ -70,7 +70,8 @@ class Brain(dict):
 
     def getURL(self, relative=False):
         """
-        If site_name is the current site, convert the physical path into a url, if it was stored.
+        If site_name is the current site, convert the physical path into a url,
+        if it was stored.
         Else return url attribute stored in SOLR
         """
         if not self.is_current_site:
@@ -98,6 +99,9 @@ class Brain(dict):
 
     def EffectiveDate(self):
         return self.get("effective", None)
+
+    def location(self):
+        return self.get("location", "")
 
 
 class SolrResults(list):

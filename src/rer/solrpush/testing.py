@@ -1,23 +1,26 @@
 # -*- coding: utf-8 -*-
 from plone.api.portal import set_registry_record
 from plone.app.contenttypes.testing import PLONE_APP_CONTENTTYPES_FIXTURE
-from plone.app.robotframework.testing import REMOTE_LIBRARY_BUNDLE_FIXTURE
 from plone.app.testing import applyProfile
 from plone.app.testing import FunctionalTesting
 from plone.app.testing import IntegrationTesting
 from plone.app.testing import PloneSandboxLayer
+from plone.restapi.testing import PloneRestApiDXLayer
 from plone.testing import Layer
 from plone.testing import z2
 from rer.solrpush.interfaces.settings import IRerSolrpushSettings
+from rer.solrpush.solr import init_solr_push
+from six.moves import range
 from time import sleep
 from ZPublisher.HTTPRequest import HTTPRequest
 
+import collective.z3cform.datagridfield
 import os
+import plone.restapi
 import rer.solrpush
 import six
 import subprocess
 import sys
-from six.moves import range
 
 BIN_DIR = os.path.dirname(os.path.realpath(sys.argv[0]))
 
@@ -83,7 +86,8 @@ class SolrLayer(Layer):
 SOLR_FIXTURE = SolrLayer()
 
 
-class RerSolrpushLayer(PloneSandboxLayer):
+class RerSolrpushRestApiLayer(PloneRestApiDXLayer):
+    """ """
 
     defaultBases = (PLONE_APP_CONTENTTYPES_FIXTURE,)
 
@@ -118,6 +122,8 @@ class RerSolrpushLayer(PloneSandboxLayer):
         HTTPRequest.retry_max_count = 3
 
         self.loadZCML(package=rer.solrpush)
+        self.loadZCML(package=plone.restapi)
+        self.loadZCML(package=collective.z3cform.datagridfield)
 
     def tearDownZope(self, app):
         HTTPRequest.retry_max_count = self._orig_retry_max_count
@@ -125,34 +131,31 @@ class RerSolrpushLayer(PloneSandboxLayer):
     def setUpPloneSite(self, portal):
         self.solr_layer.setUp()
         applyProfile(portal, "rer.solrpush:default")
+        set_registry_record("active", True, interface=IRerSolrpushSettings)
         set_registry_record(
             "solr_url",
             self.solr_layer.solr_url,
             interface=IRerSolrpushSettings,
         )
+        init_solr_push()
 
     def tearDownPloneSite(self, portal):
+        set_registry_record("active", True, interface=IRerSolrpushSettings)
+        set_registry_record(
+            "solr_url",
+            self.solr_layer.solr_url,
+            interface=IRerSolrpushSettings,
+        )
         self.solr_layer.tearDown()
 
 
-RER_SOLRPUSH_FIXTURE = RerSolrpushLayer()
-
-
-RER_SOLRPUSH_INTEGRATION_TESTING = IntegrationTesting(
-    bases=(RER_SOLRPUSH_FIXTURE,), name="RerSolrpushLayer:IntegrationTesting"
+RER_SOLRPUSH_API_FIXTURE = RerSolrpushRestApiLayer()
+RER_SOLRPUSH_API_INTEGRATION_TESTING = IntegrationTesting(
+    bases=(RER_SOLRPUSH_API_FIXTURE,),
+    name="RerSolrpushRestApiLayer:Integration",
 )
 
-
-RER_SOLRPUSH_FUNCTIONAL_TESTING = FunctionalTesting(
-    bases=(RER_SOLRPUSH_FIXTURE,), name="RerSolrpushLayer:FunctionalTesting"
-)
-
-
-RER_SOLRPUSH_ACCEPTANCE_TESTING = FunctionalTesting(
-    bases=(
-        RER_SOLRPUSH_FIXTURE,
-        REMOTE_LIBRARY_BUNDLE_FIXTURE,
-        z2.ZSERVER_FIXTURE,
-    ),
-    name="RerSolrpushLayer:AcceptanceTesting",
+RER_SOLRPUSH_API_FUNCTIONAL_TESTING = FunctionalTesting(
+    bases=(RER_SOLRPUSH_API_FIXTURE, z2.ZSERVER_FIXTURE),
+    name="RerSolrpushRestApiLayer:Functional",
 )

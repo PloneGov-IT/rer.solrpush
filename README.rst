@@ -4,7 +4,6 @@ rer.solrpush
 
 .. image:: https://github.com/RegioneER/rer.solrpush/workflows/Tests/badge.svg
 
-
 Product that allows SOLR indexing/searching of a Plone website.
 
 
